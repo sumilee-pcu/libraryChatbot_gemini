@@ -3,7 +3,8 @@ import streamlit as st
 
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.output_parsers import StrOutputParser
@@ -38,9 +39,14 @@ def create_vector_store(_docs):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
     split_docs = text_splitter.split_documents(_docs)
     persist_directory = "./chroma_db"
+    embeddings = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2",
+        model_kwargs={'device': 'cpu'},
+        encode_kwargs={'normalize_embeddings': True}
+    )
     vectorstore = Chroma.from_documents(
         split_docs,
-        GoogleGenerativeAIEmbeddings(model='models/embedding-001'),
+        embeddings,
         persist_directory=persist_directory
     )
     return vectorstore
@@ -49,10 +55,15 @@ def create_vector_store(_docs):
 @st.cache_resource
 def get_vectorstore(_docs):
     persist_directory = "./chroma_db"
+    embeddings = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2",
+        model_kwargs={'device': 'cpu'},
+        encode_kwargs={'normalize_embeddings': True}
+    )
     if os.path.exists(persist_directory):
         return Chroma(
             persist_directory=persist_directory,
-            embedding_function=GoogleGenerativeAIEmbeddings(model='models/embedding-001')
+            embedding_function=embeddings
         )
     else:
         return create_vector_store(_docs)
