@@ -1,5 +1,9 @@
 import os
 import streamlit as st
+import nest_asyncio
+
+# Streamlit에서 비동기 작업을 위한 이벤트 루프 설정
+nest_asyncio.apply()
 
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
