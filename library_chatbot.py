@@ -20,7 +20,11 @@ from langchain_chroma import Chroma
 
 
 #Gemini API 키 설정
-os.environ["GOOGLE_API_KEY"] = st.secrets["GOOGLE_API_KEY"]
+try:
+    os.environ["GOOGLE_API_KEY"] = st.secrets["GOOGLE_API_KEY"]
+except Exception as e:
+    st.error("⚠️ GOOGLE_API_KEY를 Streamlit Secrets에 설정해주세요!")
+    st.stop()
 
 #cache_resource로 한번 실행한 결과 캐싱해두기
 @st.cache_resource
@@ -90,7 +94,11 @@ def initialize_components(selected_model):
         ]
     )
 
-    llm = ChatGoogleGenerativeAI(model=selected_model)
+    llm = ChatGoogleGenerativeAI(
+        model=selected_model,
+        temperature=0.7,
+        convert_system_message_to_human=True
+    )
     history_aware_retriever = create_history_aware_retriever(llm, retriever, contextualize_q_prompt)
     question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
     rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
@@ -98,8 +106,15 @@ def initialize_components(selected_model):
 
 # Streamlit UI
 st.header("국립부경대 도서관 규정 Q&A 챗봇 💬 📚")
-option = st.selectbox("Select Gemini Model", ("gemini-1.5-pro-latest", "gemini-1.5-flash-latest", "gemini-pro"))
-rag_chain = initialize_components(option)
+option = st.selectbox("Select Gemini Model", ("gemini-pro", "gemini-1.5-pro", "gemini-1.5-flash"))
+
+try:
+    rag_chain = initialize_components(option)
+except Exception as e:
+    st.error(f"⚠️ 초기화 중 오류 발생: {str(e)}")
+    st.info("PDF 파일 경로와 API 키를 확인해주세요.")
+    st.stop()
+
 chat_history = StreamlitChatMessageHistory(key="chat_messages")
 
 conversational_rag_chain = RunnableWithMessageHistory(
