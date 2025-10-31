@@ -40,19 +40,25 @@ def load_and_split_pdf(file_path):
 #텍스트 청크들을 Chroma 안에 임베딩 벡터로 저장
 @st.cache_resource
 def create_vector_store(_docs):
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     split_docs = text_splitter.split_documents(_docs)
+    st.info(f"📄 {len(split_docs)}개의 텍스트 청크로 분할했습니다.")
+
     persist_directory = "./chroma_db"
+    st.info("🤖 임베딩 모델 로드 중... (첫 실행 시 모델 다운로드)")
     embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/all-MiniLM-L6-v2",
         model_kwargs={'device': 'cpu'},
         encode_kwargs={'normalize_embeddings': True}
     )
+
+    st.info("🔢 벡터 임베딩 생성 및 저장 중...")
     vectorstore = Chroma.from_documents(
         split_docs,
         embeddings,
         persist_directory=persist_directory
     )
+    st.success("💾 벡터 데이터베이스 생성 완료!")
     return vectorstore
 
 #만약 기존에 저장해둔 ChromaDB가 있는 경우, 이를 로드
@@ -121,10 +127,18 @@ def initialize_components(selected_model):
 
 # Streamlit UI
 st.header("국립부경대 도서관 규정 Q&A 챗봇 💬 📚")
+
+# 첫 실행 안내 메시지
+if not os.path.exists("./chroma_db"):
+    st.info("🔄 첫 실행입니다. 임베딩 모델 다운로드 및 PDF 처리 중... (약 5-7분 소요)")
+    st.info("💡 이후 실행에서는 10-15초만 걸립니다!")
+
 option = st.selectbox("Select Gemini Model", ("gemini-pro", "gemini-1.5-pro", "gemini-1.5-flash"))
 
 try:
-    rag_chain = initialize_components(option)
+    with st.spinner("🔧 챗봇 초기화 중... 잠시만 기다려주세요"):
+        rag_chain = initialize_components(option)
+    st.success("✅ 챗봇이 준비되었습니다!")
 except Exception as e:
     st.error(f"⚠️ 초기화 중 오류 발생: {str(e)}")
     st.info("PDF 파일 경로와 API 키를 확인해주세요.")
