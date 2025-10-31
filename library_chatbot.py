@@ -56,7 +56,7 @@ def get_vectorstore(_docs):
 # PDF 문서 로드-벡터 DB 저장-검색기-히스토리 모두 합친 Chain 구축
 @st.cache_resource
 def initialize_components(selected_model):
-    file_path = r"/mount/src/library_chatbot1/[챗봇프로그램및실습] 부경대학교 규정집.pdf"
+    file_path = r"/mount/src/librarychatbot_gemini/[챗봇프로그램및실습] 부경대학교 규정집.pdf"
     pages = load_and_split_pdf(file_path)
     vectorstore = get_vectorstore(pages)
     retriever = vectorstore.as_retriever()
@@ -98,7 +98,7 @@ def initialize_components(selected_model):
 
 # Streamlit UI
 st.header("국립부경대 도서관 규정 Q&A 챗봇 💬 📚")
-option = st.selectbox("Select Gemini Model", ("gemini-1.5-pro", "gemini-1.5-flash"))
+option = st.selectbox("Select Gemini Model", ("gemini-1.5-pro-latest", "gemini-1.5-flash-latest", "gemini-pro"))
 rag_chain = initialize_components(option)
 chat_history = StreamlitChatMessageHistory(key="chat_messages")
 
