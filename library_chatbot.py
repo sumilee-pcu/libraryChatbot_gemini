@@ -138,11 +138,11 @@ if not os.path.exists("./chroma_db"):
     st.info("🔄 첫 실행입니다. 임베딩 모델 다운로드 및 PDF 처리 중... (약 5-7분 소요)")
     st.info("💡 이후 실행에서는 10-15초만 걸립니다!")
 
-# Gemini 모델 선택 - gemini-pro가 가장 안정적
+# Gemini 모델 선택 - 최신 2.x 모델 사용
 option = st.selectbox("Select Gemini Model",
-    ("gemini-pro", "gemini-1.5-pro-latest", "gemini-1.5-flash-latest"),
+    ("gemini-2.0-flash-exp", "gemini-2.5-flash", "gemini-2.0-flash-lite"),
     index=0,
-    help="gemini-pro가 가장 안정적입니다"
+    help="Gemini 2.0 Flash가 가장 빠르고 효율적입니다"
 )
 
 try:
