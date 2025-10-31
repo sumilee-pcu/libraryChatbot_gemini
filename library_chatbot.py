@@ -115,11 +115,16 @@ def initialize_components(selected_model):
         ]
     )
 
-    llm = ChatGoogleGenerativeAI(
-        model=selected_model,
-        temperature=0.7,
-        convert_system_message_to_human=True
-    )
+    try:
+        llm = ChatGoogleGenerativeAI(
+            model=selected_model,
+            temperature=0.7,
+            convert_system_message_to_human=True
+        )
+    except Exception as e:
+        st.error(f"❌ Gemini 모델 '{selected_model}' 로드 실패: {str(e)}")
+        st.info("💡 'gemini-pro' 모델을 사용해보세요.")
+        raise
     history_aware_retriever = create_history_aware_retriever(llm, retriever, contextualize_q_prompt)
     question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
     rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
@@ -133,7 +138,12 @@ if not os.path.exists("./chroma_db"):
     st.info("🔄 첫 실행입니다. 임베딩 모델 다운로드 및 PDF 처리 중... (약 5-7분 소요)")
     st.info("💡 이후 실행에서는 10-15초만 걸립니다!")
 
-option = st.selectbox("Select Gemini Model", ("gemini-pro", "gemini-1.5-pro", "gemini-1.5-flash"))
+# Gemini 모델 선택 - gemini-pro가 가장 안정적
+option = st.selectbox("Select Gemini Model",
+    ("gemini-pro", "gemini-1.5-pro-latest", "gemini-1.5-flash-latest"),
+    index=0,
+    help="gemini-pro가 가장 안정적입니다"
+)
 
 try:
     with st.spinner("🔧 챗봇 초기화 중... 잠시만 기다려주세요"):
